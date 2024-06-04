@@ -8,9 +8,7 @@ geopandas
 gitdb
 GitPython
 matplotlib
-numpy
 openpyxl
-pandas
 plotly
 seaborn
 statsmodels
