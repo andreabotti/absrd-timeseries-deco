@@ -1,6 +1,6 @@
 # IMPORT LIBRARIES
 from fn__libs_data import *
-import os, datetime, pickle, pandas as pd, numpy as np, streamlit as st
+import os, requests, datetime, pickle, pandas as pd, numpy as np, streamlit as st
 import plotly.graph_objs as go, plotly.subplots as sp
 
 
@@ -26,26 +26,37 @@ st.divider()
 
 
 
-
 ##### FUNCTION TO LOAD DICT DATA
 # Function to load data from pickle files
-def load_data():
-    with open( os.path.join(DataFolder,'data_dict.pkl'), 'rb') as f:
-        data_dict = pickle.load(f)
+def load_data(source, data_path):
 
-    with open( os.path.join(DataFolder,'room_info.pkl'), 'rb') as f:
-        room_info = pickle.load(f)
-    
+    if source=='local':
+        with open( os.path.join(data_path,'data_dict.pkl'), 'rb') as f:
+            data_dict = pickle.load(f)
+
+        with open( os.path.join(data_path,'room_info.pkl'), 'rb') as f:
+            room_info = pickle.load(f)
+
+    elif source=='ftp':
+        response = requests.get( os.path.join(data_path,'data_dict.pkl') )
+        response.raise_for_status()
+        data_dict = pd.read_pickle(io.BytesIO(response.content))
+
+        response = requests.get( os.path.join(data_path,'room_info.pkl') )
+        response.raise_for_status()
+        room_info = pd.read_pickle(io.BytesIO(response.content))
+
     return data_dict, room_info
-
-
-
 
 
 ##### FILE PATHS AND DATA LOAD
 # file_path = os.path.join(DataFolder, 'AmbaAradan_4_aps.csv')
-DataFolder = 'data/'
-data_dict, room_info = load_data()
+LOCAL_PATH  = r'C:/_GitHub/andreabotti/ies-ve_viz/data/'
+FTP_PATH    = r'https://absrd.xyz/streamlit_apps/ies-ve_viz/data/'
+
+# DataFolder = 'data/'
+# data_dict, room_info = load_data(source='local', data_path=LOCAL_PATH)
+data_dict, room_info = load_data(source='ftp', data_path=FTP_PATH)
 
 
 
