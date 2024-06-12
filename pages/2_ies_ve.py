@@ -148,6 +148,7 @@ time_series = time_series_pd.tolist()
 # Decompose the time series using seasonal_decompose
 result = seasonal_decompose(time_series_pd, model='additive', period=24)
 
+
 # Compute the Fourier Transform of the time series
 fourier_transform = np.fft.fft(time_series)
 frequencies = np.fft.fftfreq(len(time_series), d=1)  # d=1 for hourly data
@@ -192,6 +193,8 @@ with col1:
 
     tab1.plotly_chart(fig, use_container_width=True)
     tab2.plotly_chart(fig2)
+
+
 
 
 
