@@ -29,9 +29,6 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 
 
-
-
-
 #####
 
 # Function to strip whitespace from strings
@@ -122,66 +119,6 @@ def create_dataframe_dict(df, unique_space_IDs):
 
 
 
-
-
-
-
-
-
-
-
-
-
-##### ##### ##### ##### 
-# def store_data__space_dict(df, space_list, replacement_dict):
-
-#     room_dfs = {}
-
-#     for room_ID in space_list:
-
-#         # Filter the DataFrame for each room name and store it in the dictionary
-#         df2 = df.loc[:, df.loc['Room ID'] == room_ID].copy()
-#         # df2.drop(['Unit', 'Room Name'], axis=0, inplace=True)
-
-#         df2.columns = df2.iloc[0]
-#         df2 = df2.rename(columns=replacement_dict)
-
-#         df2.columns = [c + '__' + room_ID for c in df2.columns]
-
-#         df2.drop(['Variable', 'Room ID'], axis=0, inplace=True)
-#         df2 = df2.iloc[:-1]
-#         datetime_index = pd.date_range(start='2023-01-01 00:00:00', end='2023-12-31 23:00:00', freq='H')
-#         if df is not None:
-#             # Check if the lengths match
-#             if len(df2) == len(datetime_index):
-#                 df2.index = datetime_index
-#             else:
-#                 st.warning("DataFrame length does not match the length of the DateTime index for 2023. Adjusting the DataFrame or the index is required.")
-
-#         # Attempt to convert all columns to floats
-#         for col in df2.columns:
-#             try:
-#                 df2[col] = pd.to_numeric(
-#                     df2[col],
-#                     # errors='coerce',
-#                     )
-#             except ValueError:
-#                 pass  # or handle the exception as needed
-
-
-#         room_dfs[room_ID] = df2
-#     #
-#     return room_dfs, True
-
-
-
-
-
-
-
-
-
-
 def iesve__col_replacement_dict():
 
     dict = {
@@ -204,3 +141,65 @@ def iesve__col_replacement_dict():
         }
     
     return dict
+
+
+
+
+
+
+
+
+
+def process_data_sw_energy_meter(df):
+    # Exclude non-time columns for melting
+    time_columns = df.columns.drop(['Account Number', 'MPAN', 'Meter Serial Number', 'Date'])
+    df_corrected_melted = df.melt(id_vars=["Date"], value_vars=time_columns, var_name="Time", value_name="Energy")
+
+    # Combine Date and Time columns to create a datetime index
+    df_corrected_melted['Datetime'] = pd.to_datetime(df_corrected_melted['Date'] + ' ' + df_corrected_melted['Time'], dayfirst=True)
+
+    # Set the new datetime index
+    df_corrected_melted = df_corrected_melted.set_index('Datetime')
+
+    # Dropping the original Date and Time columns
+    df_corrected_melted.drop(columns=['Date', 'Time'], inplace=True)
+
+    # Resample the data to hourly resolution and sum the energy values
+    df_hourly = df_corrected_melted.resample('H').sum()
+
+    # Create daily and monthly dataframes by summing up the hourly data
+    df_daily = df_hourly.resample('D').sum()
+    df_monthly = df_hourly.resample('M').sum()
+
+    return df_hourly, df_daily, df_monthly
+
+
+
+
+
+
+
+# Function to filter DataFrame based on selected criteria
+def filter_dataframe(granularity, df, plot_col):
+    if granularity == "Year":
+        # Do not filter, show entire DataFrame
+        return df
+    elif granularity == "Month":
+        # Show a slider with months
+        month = plot_col.slider(
+            "Select Month",
+            1, 12, 8,
+            )
+        return df[df.index.month == month]
+
+    elif granularity == "Week":
+        # Show a date widget to select start date
+        start_date = plot_col.date_input("Select Start Date",   value = datetime.date(2023,8,21))
+        end_date = start_date + pd.Timedelta(days=6)
+        return df[(df.index >= pd.to_datetime(start_date)) & (df.index <= pd.to_datetime(end_date))]
+
+    elif granularity == "Day":
+        # Show two date widgets for start and end dates
+        start_date = plot_col.date_input(label="Select Start Date", key="start_date",   value = datetime.date(2023,8,21))
+        end_date = plot_col.date_input(label="Select End Date",     key="end_date",     value = datetime.date(2023,8,24))
+        return df[(df.index >= pd.to_datetime(start_date)) & (df.index <= pd.to_datetime(end_date))]

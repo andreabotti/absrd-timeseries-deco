@@ -7,39 +7,10 @@ import plotly.graph_objs as go, plotly.subplots as sp
 
 
 
-##### PAGE CONFIG
-st.set_page_config(page_title="IES-VE Viz App",   page_icon=':mostly_sunny:', layout="wide")
-st.markdown(
-    """<style>.block-container {padding-top: 1rem; padding-bottom: 0rem; padding-left: 2rem; padding-right: 2rem;}</style>""",
-    unsafe_allow_html=True)
-
-
-##### TOP CONTAINER
-top_col1, top_col2 = st.columns([6,1])
-with top_col1:
-    st.markdown("# IES-VE Viz App")
-    # st.markdown("#### Analisi di dati meteorologici ITAliani per facilitare l'Adattamento ai Cambiamenti Climatici")
-    st.caption('Developed by AB.S.RD - https://absrd.xyz/')
-
-st.divider()
-
-
-
-
-# # Inject custom CSS to set the width of the sidebar
-# st.markdown(
-#     """
-#     <style>
-#         section[data-testid="stSidebar"] {
-#             width: 50px !important; # Set the width to your desired value
-#         }
-#     </style>
-#     """,
-#     unsafe_allow_html=True,
-# )
-# # Example sidebar content
-# st.sidebar.header("Sidebar")
-
+# PAGE CONFIG
+# st.set_page_config(page_title="ITACA Streamlit App", page_icon='🍝', layout="wide")
+from fn__page_header import create_page_header
+create_page_header()
 
 
 
@@ -69,8 +40,9 @@ def load_data(source, data_path):
 
 ##### FILE PATHS AND DATA LOAD
 # file_path = os.path.join(DataFolder, 'AmbaAradan_4_aps.csv')
-LOCAL_PATH  = r'C:/_GitHub/andreabotti/ies-ve_viz/data/'
-FTP_PATH    = r'https://absrd.xyz/streamlit_apps/ies-ve_viz/data/'
+LOCAL_PATH  = r'C:/_GitHub/andreabotti/absrd-timeseries-deco/data/'
+FTP_PATH    = r'https://absrd.xyz/streamlit_apps/timeseries-analysis/data/IES-VE/'
+
 
 # DataFolder = 'data/'
 # data_dict, room_info = load_data(source='local', data_path=LOCAL_PATH)

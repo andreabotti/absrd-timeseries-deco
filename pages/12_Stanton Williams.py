@@ -7,23 +7,11 @@ import plotly.graph_objs as go, plotly.subplots as sp
 
 
 
+# PAGE CONFIG
+# st.set_page_config(page_title="ITACA Streamlit App", page_icon='🍝', layout="wide")
+from fn__page_header import create_page_header
+create_page_header()
 
-
-##### PAGE CONFIG
-st.set_page_config(page_title="IES-VE Viz App",   page_icon=':mostly_sunny:', layout="wide")
-st.markdown(
-    """<style>.block-container {padding-top: 1rem; padding-bottom: 0rem; padding-left: 2rem; padding-right: 2rem;}</style>""",
-    unsafe_allow_html=True)
-
-
-##### TOP CONTAINER
-top_col1, top_col2 = st.columns([6,1])
-with top_col1:
-    st.markdown("# IES-VE Viz App")
-    # st.markdown("#### Analisi di dati meteorologici ITAliani per facilitare l'Adattamento ai Cambiamenti Climatici")
-    st.caption('Developed by AB.S.RD - https://absrd.xyz/')
-
-st.divider()
 
 
 
@@ -62,52 +50,21 @@ def load_data_csv(source, data_path, filename):
 
 ##### FILE PATHS AND DATA LOAD
 # file_path = os.path.join(DataFolder, 'AmbaAradan_4_aps.csv')
-LOCAL_PATH  = r'C:/_GitHub/andreabotti/ies-ve_viz/data/'
-FTP_PATH    = r'https://absrd.xyz/streamlit_apps/ies-ve_viz/data/'
+LOCAL_PATH  = r'C:/_GitHub/andreabotti/absrd-timeseries-deco/data/'
+FTP_PATH    = r'https://absrd.xyz/streamlit_apps/timeseries-analysis/data/SWA/'
 
-# DataFolder = 'data/'
-# data_dict, room_info = load_data(source='local', data_path=LOCAL_PATH)
 
-df = load_data_csv(source='ftp', data_path=FTP_PATH, filename='Consolidated_ExportData_2023.csv')
+df0 = load_data_csv(source='ftp', data_path=FTP_PATH, filename='SWA_ConsumptionStatement_1200051133916.csv')
 
-df['Datetime'] = pd.to_datetime(df['Datetime'])
-df.set_index('Datetime', inplace=True)
+df_hourly, df_daily, df_monthly = process_data_sw_energy_meter(df0)
+# st.dataframe(df_hourly)
 
 
 
 #####
 col1, col2 = st.columns([5,2])
-col2.markdown('###### Sample data exploration for Unipol')
+col2.markdown('###### Data exploration for Stanton Williams Energy')
 col2.caption(f'from {FTP_PATH}')
-
-
-
-
-
-# Function to filter DataFrame based on selected criteria
-def filter_dataframe(granularity, df, plot_col):
-    if granularity == "Year":
-        # Do not filter, show entire DataFrame
-        return df
-    elif granularity == "Month":
-        # Show a slider with months
-        month = plot_col.slider(
-            "Select Month",
-            1, 12, 8,
-            )
-        return df[df.index.month == month]
-
-    elif granularity == "Week":
-        # Show a date widget to select start date
-        start_date = plot_col.date_input("Select Start Date",   value = datetime.date(2023,8,21))
-        end_date = start_date + pd.Timedelta(days=6)
-        return df[(df.index >= pd.to_datetime(start_date)) & (df.index <= pd.to_datetime(end_date))]
-
-    elif granularity == "Day":
-        # Show two date widgets for start and end dates
-        start_date = plot_col.date_input(label="Select Start Date", key="start_date",   value = datetime.date(2023,8,21))
-        end_date = plot_col.date_input(label="Select End Date",     key="end_date",     value = datetime.date(2023,8,24))
-        return df[(df.index >= pd.to_datetime(start_date)) & (df.index <= pd.to_datetime(end_date))]
 
 
 
@@ -117,24 +74,25 @@ col21, col22 = col2.columns([2,3])
 
 # Streamlit widgets to choose granularity and filter DataFrame
 granularity = col21.selectbox(label="Select Granularity", options=["Year", "Month", "Week", "Day"], index=1)
-df_plot = filter_dataframe(granularity, df, plot_col=col22)
+df_plot = filter_dataframe(granularity, df_hourly, plot_col=col22)
 
 
 col2.divider()
 col21, col22 = col2.columns([2,3])
 
 # Additional selectbox for specific values
-period_values = [1, 4, 4*6, 4*12, 4*24, 4*24*7]
-period_captions = ["1 = 15 min", "4 = 1 hour", "24 = 6 hrs", "48 = 12 hrs", "96 = 24 hrs", "672 = 1 wk"]
+period_values = [1, 6, 12, 24, 24*7]
+period_captions = ["", "1 = 1 hour", "6 = 6 hrs", "12 = 12 hrs", "24 = 24 hrs", "168 = 1 wk"]
 decompose_period = col21.radio("Decompose Period", options=period_values)
 col22.markdown("\n ".join([f"+ {value}" for value in period_captions]))
+
 
 
 
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 time_series_pd = df_plot
-time_series = time_series_pd['Value'].tolist()
+time_series = time_series_pd['Energy'].tolist()
 
 # Decompose the time series using seasonal_decompose
 result = seasonal_decompose(
