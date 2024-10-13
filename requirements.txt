@@ -1,5 +1,6 @@
 altair
 bokeh
+calplot
 chart-studio
 favicon
 filelock
