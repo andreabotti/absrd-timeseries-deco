@@ -19,30 +19,8 @@ def create_page_header():
     ##### TOP CONTAINER
     top_col1, top_col2 = st.columns([6,1])
     with top_col1:
-        st.markdown("# Timeseries Analysis App")
+        st.markdown("# Timeseries Analysis App  for Unipol POE")
         # st.markdown("#### Analisi di dati meteorologici ITAliani per facilitare l'Adattamento ai Cambiamenti Climatici")
         st.caption('Developed by AB.S.RD - https://absrd.xyz/')
 
-    st.divider()
-
-
-
-
-
-
-
-# # Inject custom CSS to set the width of the sidebar
-# st.markdown(
-#     """
-#     <style>
-#         section[data-testid="stSidebar"] {
-#             width: 50px !important; # Set the width to your desired value
-#         }
-#     </style>
-#     """,
-#     unsafe_allow_html=True,
-# )
-# # Example sidebar content
-# st.sidebar.header("Sidebar")
-
-
+    custom_hr()
