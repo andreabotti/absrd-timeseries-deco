@@ -32,8 +32,8 @@ def custom_hr():
     st.markdown("""
         <style>
             .hr-line {
-                margin-top: -5px;
-                margin-bottom: 0px;
+                margin-top: -10px;
+                margin-bottom: -10px;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -43,19 +43,6 @@ def custom_hr():
 
 
 
-
-# Function to load CSV from a local file
-def load_csv_local(file):
-    df = pd.read_csv(file)
-    return df
-
-# Function to load CSV from an FTP link
-def load_csv_ftp(ftp_url):
-    response = urlopen(ftp_url)
-    data = response.read().decode('utf-8')
-    print(data)
-    df = pd.read_csv(data)
-    return df
 
 
 # Function to load data from pickle files
@@ -73,35 +60,6 @@ def load_data_csv(source, data_path, filename):
 
     return df
 
-
-
-
-
-
-#####
-# Function to create color variations
-def create_color_variations(base_color, num_colors):
-    """Create a list of colors varying slightly from a base color."""
-    colors = []
-    for i in range(num_colors):
-        # Create intermediate color
-        variation = find_intermediate_color(base_color, 'white', i / (num_colors + 2))  # Lighter shades
-        colors.append(variation)
-    return colors
-
-
-
-# Function to create color variations
-def create_color_variations(base_color_hex, num_colors):
-    """Create a list of colors varying slightly from a base color."""
-    base_color_rgb = hex_to_rgb(base_color_hex)  # Convert hex to RGB
-    white_rgb = hex_to_rgb('#FFFFFF')  # White color in RGB
-    colors = []
-    for i in range(num_colors):
-        # Create intermediate color between base color and white
-        variation = find_intermediate_color(base_color_rgb, white_rgb, i / (num_colors + 2))  # Lighter shades
-        colors.append(f'rgb{variation}')  # Convert to 'rgb(r,g,b)' format
-    return colors
 
 
 
@@ -192,7 +150,8 @@ def create_dataframe_dict(df, unique_space_IDs):
 
 
 
-#####
+
+####################################################################################
 
 def iesve__col_replacement_dict():
 
@@ -220,7 +179,6 @@ def iesve__col_replacement_dict():
 
 
 
-#####
 
 def process_data_sw_energy_meter(df):
     # Exclude non-time columns for melting
@@ -247,7 +205,6 @@ def process_data_sw_energy_meter(df):
 
 
 
-#####
 
 # Function to filter DataFrame based on selected criteria
 def filter_dataframe(granularity, df, plot_col):
@@ -279,230 +236,258 @@ def filter_dataframe(granularity, df, plot_col):
 
 
 
+####################################################################################
 
+def absrd__create_filter_widgets_FLOOR_CAT(cat_dict, meters_matrix, floors):
+    """
+    Filters the meters based on floor and category selection, and returns the filtered dataframe.
+    """
 
+    # Add a widget to select a floor
+    selected_floor = st.sidebar.multiselect("Select Floors:", options=floors, default='F08')
 
+    # Create a mapping for each category type
+    cat_mapping = {
+        'Cat_num': {key: key for key in cat_dict},
+        'Cat_eng': {key: cat_dict[key]['Cat_eng'] for key in cat_dict},
+        'Cat_ita': {key: cat_dict[key]['Cat_ita'] for key in cat_dict}
+    }
 
-
-
-
-
-
-def absrd_plotly_bar_plot_sensor(df, margin, chart_type):
-    if chart_type == "subplots":
-        # Create subplots
-        fig = make_subplots(rows=len(df.columns), cols=1, shared_xaxes=True, vertical_spacing=0.05)
-
-        # Add a subplot for each column
-        for i, column in enumerate(df.columns):
-            fig.add_trace(go.Bar(
-                x=df.index,
-                y=df[column],
-                name=column
-            ), row=i+1, col=1)
-
-        # Update layout for shared axis, title, and other styling
-        fig.update_layout(
-            showlegend=True,               # Show legend for each subplot
-            height=200*len(df.columns),     # Adjust the height of the chart
-            margin=margin if margin else dict(l=10, r=10, t=40, b=20),  # Apply user-defined margins or default
-        )
-        
-    elif chart_type == "stacked_bars":
-        # Create a stacked bar chart (single plot)
-        fig = go.Figure()
-        for column in df.columns:
-            fig.add_trace(go.Bar(
-                x=df.index,
-                y=df[column],
-                name=column
-            ))
-
-        # Update layout for stacked bars
-        fig.update_layout(
-            barmode='stack',  # Stacked bar mode
-            showlegend=True,  # Show legend
-            height=600,       # Set a fixed height for the chart
-            margin=margin if margin else dict(l=10, r=10, t=40, b=20),  # Apply user-defined margins or default
-        )
-
-    return fig
-
-
-
-
-
-
-
-
-
-
-
-def absrd_create_calendar_heatmap(df, value_column):
-    # Extract the year and ensure the index is a datetime object
-    df['date'] = df.index
-    df['day_of_year'] = df['date'].dt.dayofyear
-    df['day_of_week'] = df['date'].dt.weekday
-    df['week_of_year'] = df['date'].dt.isocalendar().week
-    
-    # Prepare the heatmap grid
-    heatmap_data = df.pivot_table(index='week_of_year', columns='day_of_week', values=value_column, aggfunc='sum').fillna(0)
-
-    # Create a heatmap using Plotly
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=heatmap_data.values, # heatmap values
-            x=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], # x-axis labels (days of the week)
-            y=heatmap_data.index, # y-axis labels (weeks of the year)
-            colorscale='YlGnBu',
-            hoverongaps=False
-        )
+    # User selects which category to filter by (ISO Cat Number, ISO Cat Name, or Unipol Cat Name)
+    filter_type = st.sidebar.radio(
+        "Choose ISO Category (english or italian):",
+        ['Cat_eng', 'Cat_ita'],
+        horizontal=True,
     )
-    # Customize layout
-    fig.update_layout(
-        title=f'Calendar Heatmap for {df["date"].dt.year.unique()[0]}',
-        xaxis_title="Day of the Week",
-        yaxis_title="Week of the Year",
-        yaxis_nticks=52,
-        yaxis_autorange="reversed",  # Reverse to have Week 1 at the top
-        height=800
+
+    # Create a dropdown for the user to select a category based on their filter type selection
+    selected_categories = st.sidebar.multiselect(
+        f"Select {filter_type}(s):",
+        options=list(cat_mapping[filter_type].values()), 
+        default=list(cat_mapping[filter_type].values())[1],
     )
-    return fig
+
+    # Reverse map the selected categories to the corresponding category keys (e.g., 'CAT01', 'CAT02', etc.)
+    selected_cat_keys = [key for key, value in cat_mapping[filter_type].items() if value in selected_categories]
+
+    # Check if selected_cat_keys are in the columns of df_meters_matrix
+    missing_keys = [key for key in selected_cat_keys if key not in meters_matrix.columns]
+
+    if missing_keys:
+        st.error(f"The following category keys are missing from the data: {missing_keys}")
+        return pd.DataFrame()  # Return empty dataframe if keys are missing
+
+    # Filter the sensors based on the selected categories (CAT01, CAT02, etc.)
+    filtered_meter_indices = meters_matrix[meters_matrix[selected_cat_keys].eq('Y').any(axis=1)].index
+
+    # Assuming you've now identified the correct column for Sensor IDs
+    meter_column_name = 'Sensor_ID'  # Replace with actual column name from df_meters_matrix
+    filtered_meters = meters_matrix.loc[filtered_meter_indices, meter_column_name].tolist()
+
+    # Convert all meters to strings and filter out None/NaN values
+    filtered_meters = [str(meter) for meter in filtered_meters if pd.notnull(meter)]
+
+    # Filter the meter options based on the selected floor
+    filtered_meters = [meter for meter in filtered_meters if any(meter.startswith(f"{f}_") for f in selected_floor)]
+
+    # Multi-select widget for selecting meters (filtered by the selected floor)
+    selected_meters = st.sidebar.multiselect("Select Meters:", options=filtered_meters, default=filtered_meters)
+
+    return selected_cat_keys, selected_meters
 
 
 
+####################################################################################
 
 
-def absrd_create_calendar_heatmap(df):
-    # Extract necessary date components
-    df['date'] = df.index
-    df['day_of_year'] = df['date'].dt.dayofyear
-    df['day_of_week'] = df['date'].dt.weekday
-    df['week_of_year'] = df['date'].dt.isocalendar().week
+def absrd__create_filter_widgets_DATES():
 
-    # Iterate over each column in the dataframe to create a heatmap for each column
-    for column in df.columns:
-        if column in ['date', 'day_of_year', 'day_of_week', 'week_of_year']:
-            continue  # Skip date-related columns we added
-        
-        # Pivot the data for calendar heatmap
-        heatmap_data = df.pivot_table(index='week_of_year', columns='day_of_week', values=column, aggfunc='sum').fillna(0)
-        
-        # Create heatmap
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=heatmap_data.values,  # Heatmap values
-                x=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],  # Day of the week
-                y=heatmap_data.index,  # Week of the year
-                colorscale='YlGnBu',
-                hoverongaps=False
+    # Sidebar options for date selection method
+    date_selection_method = st.sidebar.radio(
+        "Choose Date Selection Method:",
+        ('Entire Year', 'Week Num', 'Dates'),
+        horizontal=True,
+    )
+
+    if date_selection_method == 'Dates':
+        # Create two sub-columns for start and end date selection
+        col_start, col_end = st.sidebar.columns(2)
+
+        # Select start date and end date from the calendar for 2023
+        start_date = col_start.date_input(
+            "Start Date",
+            value=datetime.date(2023, 1, 1),
+            min_value=datetime.date(2023, 1, 1),
+            max_value=datetime.date(2023, 12, 31),
             )
-        )
+        end_date = col_end.date_input(
+            "End Date",
+            value=datetime.date(2023, 1, 31),
+            min_value=datetime.date(2023, 1, 1),
+            max_value=datetime.date(2023, 12, 31),
+            )
+
+        # Ensure start date is before or equal to the end date
+        if start_date > end_date:
+            st.sidebar.error("Start date must be before or equal to the end date.")
+
+        # Filter the data for the selected date range
+
+    elif date_selection_method == 'Week Num':
+        # Dropdown to select a week number (1-52) for 2023
+        selected_week = st.sidebar.slider(label="Select Week Number:", min_value=1, max_value=53, value=4)
+
+        # Get the start and end dates for the selected week in 2023
+        start_date = datetime.strptime(f'2023-W{int(selected_week)}-1', "%Y-W%W-%w").date()
+        end_date = start_date + timedelta(days=6)
+        # start_date = datetime.datetime.strptime(f'2023-W{int(selected_week )}-1', "%Y-W%W-%w").date()
+        # end_date = start_date + datetime.timedelta(days=6)  # Add 6 days to get the end of the week
+
+
+    elif date_selection_method == 'Entire Year':
+
+        start_date = datetime(2023, 1, 1).date()
+        end_date = datetime(2023, 12, 31).date()
+
+
+    return start_date, end_date
+
+
+
+
+####################################################################################
+
+
+
+def absrd__create_grouping_color_coding_FLOOR_CAT(cat_dict, meters_matrix, floors):
+
+    # Create a mapping for each category type
+    cat_mapping = {
+        'Cat_num': {key: key for key in cat_dict},
+        'Cat_eng': {key: cat_dict[key]['Cat_eng'] for key in cat_dict},
+        'Cat_ita': {key: cat_dict[key]['Cat_ita'] for key in cat_dict}
+    }
+
+    # User selects which category to filter by (ISO Cat Number, ISO Cat Name, or Unipol Cat Name)
+    filter_type = 'Cat_eng'
+
+    # Create a dropdown for the user to select a category based on their filter type selection
+    selected_categories = list(cat_mapping[filter_type].values())
+    st.write(selected_categories)
+
+
+    # Reverse map the selected categories to the corresponding category keys (e.g., 'CAT01', 'CAT02', etc.)
+    selected_cat_keys = [key for key, value in cat_mapping[filter_type].items() if value in selected_categories]
+
+    st.write(selected_cat_keys)
+
+    # Filter the sensors based on the selected categories (CAT01, CAT02, etc.)
+    filtered_meter_indices = meters_matrix[meters_matrix[selected_cat_keys].eq('Y').any(axis=1)].index
+
+    # Assuming you've now identified the correct column for Sensor IDs
+    meter_column_name = 'Sensor_ID'  # Replace with actual column name from df_meters_matrix
+    filtered_meters = meters_matrix.loc[filtered_meter_indices, meter_column_name].tolist()
+
+    # Convert all meters to strings and filter out None/NaN values
+    filtered_meters = [str(meter) for meter in filtered_meters if pd.notnull(meter)]
+
+    # Filter the meter options based on the selected floor
+    filtered_meters = [meter for meter in filtered_meters if any(meter.startswith(f"{f}_") for f in selected_floor)]
+
+    # Multi-select widget for selecting meters (filtered by the selected floor)
+    selected_meters = st.sidebar.multiselect("Select Meters:", options=filtered_meters, default=filtered_meters)
+
+    return selected_cat_keys, selected_meters
+
+
+
+
+
+
+####################################################################################
+
+def absrd__upload_and_process_xlsx_by_position():
+
+    col_1, col_2, col_3, col_4 = st.columns([5,3,5,3])
+    # File uploader widget for xlsx files
+    uploaded_file = col_1.file_uploader("Upload an Excel file", type=['xlsx'])
+    
+    main_df = pd.DataFrame()
+
+    if uploaded_file is not None:
+        # Read all sheets from the Excel file
+        xlsx_data = pd.read_excel(uploaded_file, sheet_name=None)  # Read all sheets as a dictionary
         
-        # Customize layout
-        fig.update_layout(
-            title=f'Calendar Heatmap for {column} ({df["date"].dt.year.unique()[0]})',
-            xaxis_title="Day of the Week",
-            yaxis_title="Week of the Year",
-            yaxis_nticks=52,
-            yaxis_autorange="reversed",  # Week 1 on top
-            height=800
-        )
+        # List all the sheets in the uploaded file
+        sheet_names = list(xlsx_data.keys())
+        selected_sheet = col_2.selectbox("Select a sheet to view", sheet_names)
         
-        return fig
+        # Load the selected sheet into a DataFrame
+        df_tmp = xlsx_data[selected_sheet]      
 
-
-
-
-
-
-
-
-import calplot
-import matplotlib.pyplot as plt
-
-def create_calplot(df, show_values, figsize):
-
-    width_in = figsize['width_px'] / figsize['dpi']
-    height_in = figsize['height_px'] / figsize['dpi']
-
-    for column in df.columns:
-        values = df[column].dropna()
-
-        # Create the calplot
-        fig, axs = calplot.calplot(
-            values,
-            # suptitle=f'Calendar Heatmap for {column}',
-            cmap='viridis_r',  # Custom color map for heatmap
-            # vmin=-2, vmax=2,  # Min and Max range for heatmap values
-            linewidth=0.5,
-            linecolor='white',
-            colorbar=True,
-            textformat='{:.0f}' if show_values else None,  # Display values on heatmap
-            textcolor='white',  # Color of text values
-            textfiller='-',     # Placeholder for missing values
-            figsize=(width_in, height_in),
+        # Display available columns in the selected sheet
+        with col_3:
+            st.write("Columns available in this sheet:", df_tmp.columns.tolist())
+        
+        # Let the user pick column positions
+        num_columns = len(df_tmp.columns)
+        column_indices = col_4.slider(
+            f"Select column positions (0 to {num_columns - 1})", 
+            min_value=0, max_value=num_columns-1, value=num_columns-1,
         )
 
-        # Iterate over the axes to set the text properties
-        for ax in axs:
-            for label in ax.texts:  # This accesses the text elements
-                label.set_fontsize(6)
-                label.set_fontfamily('Arial')
 
-        spacing_factor = 1.01
+        # If column indices are selected, filter by those positions
+        for s in sheet_names:
 
+            # st.write(s)
+            df_sheet = xlsx_data[s]
+            
+            if column_indices:
+                df_sheet = df_sheet.iloc[:, column_indices]
+                df_sheet.drop([0,1], axis=0, inplace=True)
 
-        # Get the first axis to add week numbers (assuming one year per axis)
-        ax = axs[0]
+                main_df = pd.concat([main_df, df_sheet], axis=1)
+                # st.write(df_sheet[:2])
+                # st.write(main_df[:2])
 
-        # # Add week numbers on the top x-axis
-        # week_ticks = pd.Series(values.index).dt.isocalendar().week  # Get the week numbers
-        # unique_weeks = week_ticks.unique()
+        return main_df, sheet_names, column_indices
 
-        # ax_top = ax.twiny()  # Create a second x-axis on top
-        # ax_top.set_xlim(ax.get_xlim())  # Match the limits of the original x-axis
-
-        # # Calculate the number of weeks and set tick positions across the entire chart width
-        # num_weeks = len(unique_weeks)
-        # tick_positions = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num_weeks) * spacing_factor
-
-        # # Set the shifted ticks and corresponding week numbers
-        # ax_top.set_xticks(tick_positions)
-        # ax_top.set_xticklabels([f'{int(w)}' for w in unique_weeks], fontsize=10, color='blue')
-
-        # # Hide the ticks but keep the labels
-        # ax_top.tick_params(top=False)
+    else:
+        st.write("Please upload an Excel file.")
+        return None
 
 
 
-        # Customize day labels
-        for ax in fig.axes:
 
-            # Customize month labels (months of the year)
-            month_labels = ax.get_xticklabels()
-            for text in month_labels:
-                text.set_fontsize(7)
-                text.set_color('black')
-                text.set_fontfamily('Arial')
+####################################################################################
 
-            # Customize year labels
-            year_labels = ax.get_yticklabels()
-            for text in year_labels:
-                text.set_fontsize(8)
-                text.set_color('black')
-                text.set_fontfamily('Arial')
 
-        # Manually create a single colorbar for the figure
-        # cbar = fig.colorbar(ax.get_children()[0], ax=ax, orientation='vertical')
-        # cbar.ax.yaxis.set_tick_params(labelsize=8, colors='black')
-        # cbar.ax.set_yticklabels(cbar.ax.get_yticklabels(), fontfamily='Arial')
+def absrd__create_filter_widgets_MONTH_WEEK():
+    # Sidebar options for date selection method
+    date_selection_method = st.sidebar.radio(
+        "Choose Date Selection Method:",
+        ('Month Num', 'Week Num'),
+        horizontal=True,
+    )
+
+    if date_selection_method == 'Month Num':
+        # Dropdown to select a month number (1-12) for 2023
+        selected_month = st.slider(label="Select Month Number:", min_value=1, max_value=12, value=1)
+
+        # Get the start date (first day of the month)
+        start_date = datetime(2023, selected_month, 1).date()
         
-        # # Adjust the layout to prevent the colorbar from being misaligned
-        # plt.tight_layout()
+        # Get the last day of the selected month using calendar.monthrange()
+        last_day_of_month = calendar.monthrange(2023, selected_month)[1]
+        end_date = datetime(2023, selected_month, last_day_of_month).date()
 
-        # Display the plot in Streamlit
-        st.markdown(f'##### Calendar Heatmap for {column}')
-        st.pyplot(fig, dpi=figsize['dpi'])
-        custom_hr()
+    elif date_selection_method == 'Week Num':
+        # Dropdown to select a week number (1-52) for 2023
+        selected_week = st.slider(label="Select Week Number:", min_value=1, max_value=53, value=4)
 
+        # Get the start and end dates for the selected week in 2023
+        start_date = datetime.strptime(f'2023-W{int(selected_week)}-1', "%Y-W%W-%w").date()
+        end_date = start_date + timedelta(days=6)
+
+    return start_date, end_date
