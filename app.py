@@ -54,7 +54,7 @@ iso_cat__color_dict = {
 ####################################################################################
 # PAGE CONFIG
 from fn__page_header import create_page_header
-create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict)
+create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict, show_cat_color_labels=False)
 
 
 
