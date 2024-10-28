@@ -16,7 +16,7 @@ from fn__page_header import create_page_header
 iso_cat__color_dict = st.session_state['POE_Unipol__CatColor_Dict']
 iso_seu_dict = st.session_state['POE_Unipol__ISO_SEU_Dict']
 
-create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict, show_cat_color_labels=True
+create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict, show_cat_color_labels=False)
 
 
 
