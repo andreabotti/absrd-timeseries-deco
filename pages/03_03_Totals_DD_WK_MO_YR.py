@@ -10,7 +10,10 @@ from urllib.request import urlopen
 ####################################################################################
 # PAGE CONFIG
 from fn__page_header import create_page_header
-create_page_header()
+iso_cat__color_dict = st.session_state['POE_Unipol__CatColor_Dict']
+iso_seu_dict = st.session_state['POE_Unipol__ISO_SEU_Dict']
+
+create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict)
 
 
 
@@ -25,8 +28,6 @@ if 'POE_Unipol__ISO_SEU_Dict' not in st.session_state and \
     st.error("Required session state variables are missing. Please visit the first page of the app first")
 
 else:
-    iso_cat__color_dict = st.session_state['POE_Unipol__CatColor_Dict']
-    iso_seu_dict = st.session_state['POE_Unipol__ISO_SEU_Dict']
 
     df_meters_matrix =  st.session_state['POE_Unipol__SensorMatrix']
 
@@ -86,8 +87,9 @@ def split_by_prefix(df):
     
     for prefix in prefixes:
         # Filter the columns that have the current prefix as the first element in the tuple
-        filtered_columns = [col for col in df.columns if col.split("_")[0] == prefix]
-        
+        filtered_columns = sorted( [col for col in df.columns if col.split("_")[0] == prefix] )
+        filtered_columns = [col for col in filtered_columns if 'GR' not in col]
+
         # Slice the dataframe to only include the filtered columns
         sliced_df = df[filtered_columns]
         
@@ -152,22 +154,110 @@ with tab_yearly:
     st.dataframe(yearly_totals)
 
 
+
+
+
+
 with tab_yearly_all:
-    # col_table, col_chart = st.columns([2,5])
     st.write("##### Yearly Totals (kWh) - All meters")
 
     # Apply the function to your dataframe
     yearly_totals__dict = split_by_prefix(df=METERS_DATA_monthly)
 
     for f in floors:
-        col_1, col_2, col_3 = st.columns([1,3,6])
+        col_1, space, col_2, space, col_3 = st.columns([5, 1, 15, 1, 24])
+
 
         year_total_df = yearly_totals__dict[f]
         year_total_df['total'] = year_total_df.sum(axis=1)
 
-        col_1.metric(label=f'**{f}**: Yearly Total kWh ', value=year_total_df.at[f,'total'] )
+        # Display yearly total metric
+        col_1.metric(label=f'**{f}**: Yearly Total kWh ', value=year_total_df.at[f, 'total'])
         col_3.dataframe(year_total_df)
 
-        absrd__create_grouping_color_coding_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
+        # Initialize the figure
+        fig_stacked_bars_h = go.Figure()
 
-        custom_hr()
+        # Drop the total column for plotting
+        year_total_df__plot = year_total_df.drop(['total'], axis=1)
+
+        # Dictionary to collect columns by selected category
+        grouped_data = {}
+
+        for col in year_total_df__plot.columns:
+            # Define category mappings and filters
+            cat_dict = iso_seu_dict
+            meters_matrix = df_meters_matrix
+            filter_type = 'Cat_eng'
+            cat_mapping = {
+                'Cat_num': {key: key for key in cat_dict},
+                'Cat_eng': {key: cat_dict[key]['Cat_eng'] for key in cat_dict},
+                'Cat_ita': {key: cat_dict[key]['Cat_ita'] for key in cat_dict}
+            }
+
+            try:
+                # Matching row in the matrix for color and category
+                meter_column_name = 'Sensor_ID'  # Replace with actual column name if different
+                matching_row = meters_matrix[meters_matrix[meter_column_name] == col].iloc[0]
+                selected_cat = matching_row[matching_row == "Y"].index.tolist()[0]  # Column where value is "Y"
+                selected_color = iso_cat__color_dict[selected_cat]
+
+                # Add to grouped data dictionary by category
+                if selected_cat not in grouped_data:
+                    grouped_data[selected_cat] = {
+                        'color': selected_color,
+                        'data': []
+                    }
+                grouped_data[selected_cat]['data'].append((col, year_total_df[col]))
+
+            except Exception as e:
+                # Print the error if needed
+                print(f"Error processing sensor {col}: {e}")
+
+        # Add traces to the figure by category group
+        for category, group in grouped_data.items():
+            for col, data in group['data']:
+                # Simplify the trace name to the last part after '_'
+                simple_name = col.split('_')[-1]
+
+                fig_stacked_bars_h.add_trace(
+                    go.Bar(
+                        x=data,                      # Data for x-axis (horizontal bars)
+                        y=year_total_df.index,       # Data for y-axis (categories)
+                        name=simple_name,            # Use simplified name in the legend
+                        orientation='h',
+                        marker=dict(color=group['color']),  # Apply group color
+                    )
+                )
+
+        # Update layout for stacked bars and legend at the top
+        fig_stacked_bars_h.update_layout(
+            barmode='stack',
+
+            xaxis=dict(
+                range=[0, 101000],           # Set fixed x-axis range
+                dtick=10000,           # Set dtick for intervals (adjust as needed)
+                showgrid=True,               # Show gridlines
+                gridcolor="LightGray",       # Gridline color
+                gridwidth=0.1,                # Gridline width
+            ),
+
+            height=140,
+            showlegend=True,                   # Show legend
+            legend=dict(
+                orientation="h",               # Horizontal legend
+                yanchor="bottom",
+                y=1.02,                        # Position above chart
+                xanchor="center",
+                x=0.5
+            ),
+            margin=dict(l=10, r=10, t=10, b=0)  # Adjust margins
+        )
+
+        # Display the plot
+        col_2.plotly_chart(fig_stacked_bars_h)
+
+        custom_hr()  # Render custom horizontal line, if defined
+
+
+

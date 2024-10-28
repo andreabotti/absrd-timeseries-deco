@@ -238,6 +238,31 @@ def filter_dataframe(granularity, df, plot_col):
 
 ####################################################################################
 
+def absrd__create_filter_widgets_FLOOR(cat_dict, meters_matrix, floors):
+    """
+    Filters the meters based on floor and category selection, and returns the filtered dataframe.
+    """
+
+    # Add a widget to select a floor
+    selected_floor = st.sidebar.multiselect("Select Floors:", options=floors, default='F08')
+
+    all_meters = meters_matrix['Sensor_ID'].to_list()
+    filtered_meters = [str(meter) for meter in all_meters if pd.notnull(meter)]
+
+    # Filter the meter options based on the selected floor
+    filtered_meters = [meter for meter in filtered_meters if any(meter.startswith(f"{f}_") for f in selected_floor)]
+
+    # Multi-select widget for selecting meters (filtered by the selected floor)
+    selected_meters = st.sidebar.multiselect("Select Meters:", options=filtered_meters, default=filtered_meters)
+
+    return selected_meters
+
+
+
+
+
+
+
 def absrd__create_filter_widgets_FLOOR_CAT(cat_dict, meters_matrix, floors):
     """
     Filters the meters based on floor and category selection, and returns the filtered dataframe.
@@ -255,8 +280,9 @@ def absrd__create_filter_widgets_FLOOR_CAT(cat_dict, meters_matrix, floors):
 
     # User selects which category to filter by (ISO Cat Number, ISO Cat Name, or Unipol Cat Name)
     filter_type = st.sidebar.radio(
-        "Choose ISO Category (english or italian):",
-        ['Cat_eng', 'Cat_ita'],
+        label = "Choose ISO Category (english or italian):",
+        options = ['Cat_eng', 'Cat_ita'],
+        index = 1,
         horizontal=True,
     )
 
@@ -264,7 +290,7 @@ def absrd__create_filter_widgets_FLOOR_CAT(cat_dict, meters_matrix, floors):
     selected_categories = st.sidebar.multiselect(
         f"Select {filter_type}(s):",
         options=list(cat_mapping[filter_type].values()), 
-        default=list(cat_mapping[filter_type].values())[1],
+        default=list(cat_mapping[filter_type].values())[8],
     )
 
     # Reverse map the selected categories to the corresponding category keys (e.g., 'CAT01', 'CAT02', etc.)
@@ -286,6 +312,7 @@ def absrd__create_filter_widgets_FLOOR_CAT(cat_dict, meters_matrix, floors):
 
     # Convert all meters to strings and filter out None/NaN values
     filtered_meters = [str(meter) for meter in filtered_meters if pd.notnull(meter)]
+
 
     # Filter the meter options based on the selected floor
     filtered_meters = [meter for meter in filtered_meters if any(meter.startswith(f"{f}_") for f in selected_floor)]
@@ -368,13 +395,13 @@ def absrd__create_grouping_color_coding_FLOOR_CAT(cat_dict, meters_matrix, floor
         'Cat_ita': {key: cat_dict[key]['Cat_ita'] for key in cat_dict}
     }
 
+
     # User selects which category to filter by (ISO Cat Number, ISO Cat Name, or Unipol Cat Name)
     filter_type = 'Cat_eng'
 
     # Create a dropdown for the user to select a category based on their filter type selection
     selected_categories = list(cat_mapping[filter_type].values())
     st.write(selected_categories)
-
 
     # Reverse map the selected categories to the corresponding category keys (e.g., 'CAT01', 'CAT02', etc.)
     selected_cat_keys = [key for key, value in cat_mapping[filter_type].items() if value in selected_categories]
@@ -491,3 +518,35 @@ def absrd__create_filter_widgets_MONTH_WEEK():
         end_date = start_date + timedelta(days=6)
 
     return start_date, end_date
+
+
+
+
+
+
+
+####################################################################################
+
+
+# Define a function that performs the subtraction operation on the target column
+def subtract_columns(df, target_col, cols_to_subtract):
+    """
+    Subtracts the values of each column in cols_to_subtract from the target_col in the dataframe.
+    """
+    required_columns = target_col + cols_to_subtract
+    target = target_col[0]  # Extract the target column name as a string
+    
+    if all(col in df.columns for col in required_columns):
+        # Preserve the original target column values before any subtraction
+        if f'{target}GRO' not in df.columns:
+            df[f'{target}GR'] = df[target]  # Create a backup column for original values if not already done
+
+        # Calculate the total to subtract by summing columns to subtract
+        total_subtraction = df[cols_to_subtract].sum(axis=1)
+
+        # Assign the result of target minus total_subtraction to the target column
+        df[target] = df[f'{target}GR'] - total_subtraction
+    else:
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        print(f"Missing columns in DataFrame: {missing_cols}")
+    return df

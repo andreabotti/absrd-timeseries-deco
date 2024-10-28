@@ -43,7 +43,9 @@ else:
 
 
 ####################################################################################
-selected_cat_keys, selected_meters = absrd__create_filter_widgets_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
+# selected_cat_keys, selected_meters = absrd__create_filter_widgets_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
+
+selected_meters = absrd__create_filter_widgets_FLOOR(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
 
 if selected_meters:
     df_plot = METERS_DATA_hourly[selected_meters]
@@ -71,6 +73,28 @@ df_plot = df_plot[(df_plot.index >= pd.Timestamp(start_date)) & (df_plot.index <
 tab_calplot, tab_scatter = st.tabs(['CALENDAR HEATMAP', 'SCATTER CHARTS'])
 
 
+
+
+
+
+
+
+####################################################################################
+with tab_calplot:
+
+    calplot_figsize = {
+    'width_px' : 6600,     # Desired pixel dimensions
+    'height_px' : 1000,     # Desired pixel dimensions
+    'dpi' : 600,           # Define DPI (dots per inch)
+    }
+
+    # Plot calendar heatmap
+    create_calplot(df_plot, show_values=True, figsize=calplot_figsize)
+
+
+
+
+'''
 with tab_scatter:
 
     with st.sidebar:
@@ -146,21 +170,4 @@ with tab_scatter:
 
 
 
-
-
-
-####################################################################################
-with tab_calplot:
-
-    calplot_figsize = {
-    'width_px' : 6600,     # Desired pixel dimensions
-    'height_px' : 1000,     # Desired pixel dimensions
-    'dpi' : 600,           # Define DPI (dots per inch)
-    }
-
-    # Plot calendar heatmap
-    create_calplot(df_plot, show_values=True, figsize=calplot_figsize)
-
-
-
-
+'''

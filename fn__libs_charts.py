@@ -218,49 +218,58 @@ def create_calplot(df, show_values, figsize):
             # suptitle=f'Calendar Heatmap for {column}',
             cmap='viridis_r',  # Custom color map for heatmap
             # vmin=-2, vmax=2,  # Min and Max range for heatmap values
-            linewidth=0.5,
+            linewidth=0.8,
             linecolor='white',
-            colorbar=True,
+            colorbar=False,
             textformat='{:.0f}' if show_values else None,  # Display values on heatmap
             textcolor='white',  # Color of text values
             textfiller='-',     # Placeholder for missing values
             figsize=(width_in, height_in),
+            yearlabel_kws={
+                "fontsize": 14,           # Font size for the year label
+                "color": "black",      # Font color for the year label
+                "fontfamily": "Arial",    # Font family
+                # "weight": "bold"          # Font weight, optional
+                },
         )
 
         # Iterate over the axes to set the text properties
         for ax in axs:
             for label in ax.texts:  # This accesses the text elements
-                label.set_fontsize(6)
+                label.set_fontsize(7)
                 label.set_fontfamily('Arial')
 
-        spacing_factor = 1.01
+        spacing_factor = 0.904
+        spacing_factor = 0.9634
 
 
         # Get the first axis to add week numbers (assuming one year per axis)
         ax = axs[0]
-
         # # Add week numbers on the top x-axis
-        # week_ticks = pd.Series(values.index).dt.isocalendar().week  # Get the week numbers
-        # unique_weeks = week_ticks.unique()
+        week_ticks = pd.Series(values.index).dt.isocalendar().week  # Get the week numbers
+        unique_weeks = ['.','.','.'] + (sorted(week_ticks.unique()))
+        print(unique_weeks)
 
-        # ax_top = ax.twiny()  # Create a second x-axis on top
-        # ax_top.set_xlim(ax.get_xlim())  # Match the limits of the original x-axis
+        ax_top = ax.twiny()  # Create a second x-axis on top
+        ax_top.set_xlim(ax.get_xlim())  # Match the limits of the original x-axis
 
         # # Calculate the number of weeks and set tick positions across the entire chart width
-        # num_weeks = len(unique_weeks)
-        # tick_positions = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num_weeks) * spacing_factor
+        num_weeks = len(unique_weeks)
+        tick_positions = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], num_weeks) * spacing_factor
 
         # # Set the shifted ticks and corresponding week numbers
-        # ax_top.set_xticks(tick_positions)
-        # ax_top.set_xticklabels([f'{int(w)}' for w in unique_weeks], fontsize=10, color='blue')
+        ax_top.set_xticks(tick_positions)
+        ax_top.set_xticklabels([f'{str(w)}' for w in unique_weeks], fontsize=7, color='grey')
 
         # # Hide the ticks but keep the labels
-        # ax_top.tick_params(top=False)
+        ax_top.tick_params(top=False)
 
 
 
         # Customize day labels
         for ax in fig.axes:
+
+            # ax.legend().set_visible(False)
 
             # Customize month labels (months of the year)
             month_labels = ax.get_xticklabels()
@@ -272,7 +281,7 @@ def create_calplot(df, show_values, figsize):
             # Customize year labels
             year_labels = ax.get_yticklabels()
             for text in year_labels:
-                text.set_fontsize(8)
+                text.set_fontsize(7.5)
                 text.set_color('black')
                 text.set_fontfamily('Arial')
 
