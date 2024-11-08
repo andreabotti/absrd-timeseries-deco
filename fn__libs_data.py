@@ -494,9 +494,17 @@ def absrd__create_filter_widgets_MONTH_WEEK():
     # Sidebar options for date selection method
     date_selection_method = st.sidebar.radio(
         "Choose Date Selection Method:",
-        ('Month Num', 'Week Num'),
+        ('Entire Year','Month Num', 'Week Num'),
         horizontal=True,
     )
+
+
+    if date_selection_method == 'Entire Year':
+
+        # Get the start date (first day of the month)
+        start_date = datetime(2023,1,1).date()
+        end_date = datetime(2023,12,31).date()
+
 
     if date_selection_method == 'Month Num':
         # Dropdown to select a month number (1-12) for 2023
