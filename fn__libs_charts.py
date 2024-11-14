@@ -415,3 +415,47 @@ def plot_typical_week_box_plot(df, meter_id, plot_height, orientation, boxgap, b
 
     return fig
 
+
+
+
+
+
+
+
+
+
+# Function to display comparison tables and charts for a specific sensor within a tab
+def absrd_plot_comparison_digital_real(meter_id, plot_data, timeframe, table_height, chart_height, chart_margins, digital_color, real_color):
+    # Create two columns: one for the table and one for the chart
+    col1, col2 = st.columns([2, 5])
+
+    # In the first column, display the table
+    with col1:
+        st.markdown(f"##### {timeframe} totals for meter: {meter_id} (table)")
+        st.dataframe(round(plot_data,2), height=table_height)
+
+    # In the second column, plot the comparison as a column chart
+    with col2:
+        st.markdown(f"##### {timeframe} totals for meter: {meter_id} (chart)")
+
+        # Reshape data into long-form for Plotly
+        plot_data_long = plot_data.reset_index().melt(id_vars='datetime', var_name='Type', value_name='Daily Total')
+
+        # Create a Plotly figure with separate traces for digital and real data
+        fig = px.bar(
+            plot_data_long,
+            x='datetime',
+            y='Daily Total',
+            color='Type',  # Color by 'Type' to differentiate 'Daily Digital' and 'Daily Real'
+            color_discrete_map={'Daily Digital': digital_color, 'Daily Real': real_color},
+            barmode='group',
+            height=chart_height,
+            labels={'Daily Total': 'Daily Totals', 'datetime': 'Date'}
+        )
+
+        # Customize the margins using the user-defined margins
+        fig.update_layout(margin=dict(l=chart_margins['left'], r=chart_margins['right'], t=chart_margins['top'], b=chart_margins['bottom']))
+
+        st.plotly_chart(fig)
+
+    custom_hr()

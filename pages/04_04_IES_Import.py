@@ -49,13 +49,11 @@ else:
 
 ####################################################################################
 
-selected_cat_keys, selected_meters = absrd__create_filter_widgets_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
-
-if selected_meters:
-    df_monthly  = METERS_DATA_hourly[selected_meters]
-    df_weekly   = METERS_DATA_weekly[selected_meters]
-    df_daily    = METERS_DATA_daily[selected_meters]
-    df_hourly   = METERS_DATA_hourly[selected_meters]
+# selected_cat_keys, selected_meters = absrd__create_filter_widgets_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
+df_monthly  = METERS_DATA_hourly
+df_weekly   = METERS_DATA_weekly
+df_daily    = METERS_DATA_daily
+df_hourly   = METERS_DATA_hourly
 
 
 

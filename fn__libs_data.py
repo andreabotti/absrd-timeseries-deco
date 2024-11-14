@@ -487,6 +487,39 @@ def absrd__upload_and_process_xlsx_by_position():
 
 
 
+
+
+def absrd__upload_and_process_xlsx_all_columns():
+
+    uploaded_file = st.file_uploader("Upload an Excel file", type=['xlsx'])
+    
+    main_df = pd.DataFrame()
+
+    if uploaded_file is not None:
+        # Read all sheets from the Excel file
+        xlsx_data = pd.read_excel(uploaded_file, sheet_name=None)  # Read all sheets as a dictionary
+        
+        # List all the sheets in the uploaded file
+        sheet_names = list(xlsx_data.keys())
+
+        # Load the selected sheet into a DataFrame
+        s = sheet_names[0]
+        df = xlsx_data[s]
+        df = df.iloc[:, 1:]
+
+        # st.dataframe(df)
+
+        return df
+
+    else:
+        st.error("Please upload an Excel file.")
+        return None
+
+
+
+
+
+
 ####################################################################################
 
 
@@ -558,3 +591,17 @@ def subtract_columns(df, target_col, cols_to_subtract):
         missing_cols = [col for col in required_columns if col not in df.columns]
         print(f"Missing columns in DataFrame: {missing_cols}")
     return df
+
+
+
+
+
+
+def create_datetime_range(start_date, end_date, freq):
+    # Adjust end date to include the entire last day by setting time to 23:59:59 for hourly frequency
+    if freq == 'H':
+        end_date = datetime.combine(end_date, datetime.max.time())  # Set to the end of the day (23:59:59)
+    
+    datetime_range = pd.date_range(start=start_date, end=end_date, freq=freq)
+    
+    return datetime_range

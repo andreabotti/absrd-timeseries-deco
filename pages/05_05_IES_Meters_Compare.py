@@ -10,6 +10,7 @@ from datetime import datetime, timedelta  # Explicitly import datetime class fro
 
 
 
+
 ####################################################################################
 # PAGE CONFIG
 from fn__page_header import create_page_header
@@ -17,7 +18,6 @@ iso_cat__color_dict = st.session_state['POE_Unipol__CatColor_Dict']
 iso_seu_dict = st.session_state['POE_Unipol__ISO_SEU_Dict']
 
 create_page_header(cat_dict=iso_seu_dict, color_dict=iso_cat__color_dict, show_cat_color_labels=False)
-
 
 
 
@@ -47,12 +47,59 @@ else:
     floors.sort()
 
 
+
 IESVE_hourly = st.session_state['IESVE_export_data']
+
+
+
 
 
 
 ####################################################################################
 
+# selected_cat_keys, selected_meters = absrd__create_filter_widgets_FLOOR_CAT(cat_dict=iso_seu_dict, meters_matrix=df_meters_matrix, floors=floors)
+df_monthly  = METERS_DATA_hourly
+df_weekly   = METERS_DATA_weekly
+df_daily    = METERS_DATA_daily
+df_hourly   = METERS_DATA_hourly
+
+
+
+
+
+
+
+####################################################################################
+all_data, sheet_names, column_indices = absrd__upload_and_process_xlsx_by_position()
+
+all_data.columns = all_data.columns.str.replace('Electricity: ', '').str.strip()
+
+
+with st.sidebar:
+
+    custom_hr()
+    start_date, end_date = absrd__create_filter_widgets_MONTH_WEEK()
+    st.write(start_date, end_date)
+
+# Generate a datetime range between the start and end dates with hourly frequency ('H') or daily frequency ('D')
+datetime_range = create_datetime_range(start_date=start_date, end_date=end_date, freq='H')  # You can switch 'H' to 'D' for daily frequency
+all_data.index = datetime_range
+
+
+custom_hr()
+
+#####
+with st.expander(f"Data parsed from Excel from column: {column_indices}"):
+    st.dataframe(all_data)
+
+
+
+st.session_state['IESVE_export_data'] = all_data
+
+
+
+
+####################################################################################
 # Add a widget to select a floor
 selected_floor = st.sidebar.multiselect("Select Floors:", options=floors, default='F08')
 
@@ -84,10 +131,13 @@ end_datetime = digital_df.index.max()
 # Use the start and end datetime to slice the real_df
 real_df = real_df.loc[start_datetime:end_datetime]
 
-# st.dataframe(digital_df)
-# st.dataframe(real_df)
-# st.write( [c for c in real_df.columns] )
-# st.write( [c for c in digital_df.columns] )
+with st.expander('DIGITAL DATA'):
+    st.dataframe(digital_df, height=250)
+
+with st.expander('METERED DATA'):
+    st.dataframe(real_df, height=250)
+    # st.write( [c for c in real_df.columns] )
+    # st.write( [c for c in digital_df.columns] )
 
 
 # Dictionary to store combined dataframes
@@ -113,6 +163,10 @@ for real_col in real_df.columns:
 
 
 # st.write(combined_data)
+
+
+
+
 
 
 
