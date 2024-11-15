@@ -507,7 +507,10 @@ def absrd__upload_and_process_xlsx_all_columns():
         df = xlsx_data[s]
         df = df.iloc[:, 1:]
 
-        # st.dataframe(df)
+        try:
+            df.columns = df.columns.str.replace("Electricity: ", "", regex=False)
+        except:
+            ''
 
         return df
 

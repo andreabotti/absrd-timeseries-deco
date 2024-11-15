@@ -87,6 +87,7 @@ col_01, col_02 = st.columns([2,5])
 with col_01:
     df0 = absrd__upload_and_process_xlsx_all_columns()
 
+
 datetime_range = create_datetime_range(start_date=start_date, end_date=end_date, freq='H')  # You can switch 'H' to 'D' for daily frequency
 df0.index = datetime_range
 
@@ -164,8 +165,8 @@ def concatenate_by_month(sensor_data_dict, sensor_id):
 
 
 
-table_height = 300
-chart_height = 300
+table_height = 250
+chart_height = 250
 
 chart_margins = {
     'left': 10,
@@ -186,12 +187,12 @@ tab1, tab2, tab3 = st.tabs(
 
 
 # Define colors for digital and real traces outside the function
-digital_color = '#1f77b4'  # Color for "Daily Digital"
-real_color = '#ff7f0e'     # Color for "Daily Real"
+digital_color = '#0c6681'  # Color for "Daily Digital"
+real_color = '#ff5733'     # Color for "Daily Real"
 
 
 # Step 5: Loop through each selected sensor (i.e., columns of the input dataframe) and display their comparison tables in the relevant tab
-for meter_id in df_monthly.columns:  # No need to drop 'month_year' since it's no longer a column
+for meter_id in digi_df_monthly.columns:  # No need to drop 'month_year' since it's no longer a column
 
     # Skip meter IDs with 'GR' in the header
     if 'GR' in meter_id:
