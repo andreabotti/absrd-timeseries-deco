@@ -160,13 +160,8 @@ def concatenate_by_month(sensor_data_dict, sensor_id):
 
 ####################################################################################
 
-
-
-
-
-
-table_height = 250
-chart_height = 250
+table_height = 210
+chart_height = 225
 
 chart_margins = {
     'left': 10,
@@ -203,14 +198,14 @@ for meter_id in digi_df_monthly.columns:  # No need to drop 'month_year' since i
             # Create a daily comparison dataframe for the selected meter_id
             df_daily_comparison = pd.DataFrame({
                 "datetime": digi_df_daily.index,
-                "Daily Digital": pd.to_numeric(digi_df_daily[meter_id], errors='coerce'),
-                "Daily Real": pd.to_numeric(real_df_daily[meter_id], errors='coerce')
+                "Digital": pd.to_numeric(digi_df_daily[meter_id], errors='coerce'),
+                "Real": pd.to_numeric(real_df_daily[meter_id], errors='coerce')
             })
             df_daily_comparison.set_index("datetime", inplace=True)
 
             absrd_plot_comparison_digital_real(
                 meter_id=meter_id,
-                plot_data=df_daily_comparison,
+                df=df_daily_comparison,
                 timeframe="Daily",
                 table_height=table_height, chart_height=chart_height, chart_margins=chart_margins,
                 digital_color=digital_color, real_color=real_color,
@@ -226,14 +221,14 @@ for meter_id in digi_df_monthly.columns:  # No need to drop 'month_year' since i
             # Create a daily comparison dataframe for the selected meter_id
             df_weekly_comparison = pd.DataFrame({
                 "datetime": digi_df_weekly.index,
-                "Weekly Digital": pd.to_numeric(digi_df_weekly[meter_id], errors='coerce'),
-                "Weekly Real": pd.to_numeric(real_df_weekly[meter_id], errors='coerce')
+                "Digital": pd.to_numeric(digi_df_weekly[meter_id], errors='coerce'),
+                "Real": pd.to_numeric(real_df_weekly[meter_id], errors='coerce')
             })
             df_weekly_comparison.set_index("datetime", inplace=True)
 
             absrd_plot_comparison_digital_real(
                 meter_id=meter_id,
-                plot_data=df_weekly_comparison,
+                df=df_weekly_comparison,
                 timeframe="Weekly",
                 table_height=table_height, chart_height=chart_height, chart_margins=chart_margins,
                 digital_color=digital_color, real_color=real_color,
@@ -250,14 +245,14 @@ for meter_id in digi_df_monthly.columns:  # No need to drop 'month_year' since i
             # Create a daily comparison dataframe for the selected meter_id
             df_monthly_comparison = pd.DataFrame({
                 "datetime": digi_df_monthly.index,
-                "Monthly Digital": pd.to_numeric(digi_df_monthly[meter_id], errors='coerce'),
-                "Monthly Real": pd.to_numeric(real_df_monthly[meter_id], errors='coerce')
+                "Digital": pd.to_numeric(digi_df_monthly[meter_id], errors='coerce'),
+                "Real": pd.to_numeric(real_df_monthly[meter_id], errors='coerce')
             })
             df_monthly_comparison.set_index("datetime", inplace=True)
 
             absrd_plot_comparison_digital_real(
                 meter_id=meter_id,
-                plot_data=df_monthly_comparison,
+                df=df_monthly_comparison,
                 timeframe="Monthly",
                 table_height=table_height, chart_height=chart_height, chart_margins=chart_margins,
                 digital_color=digital_color, real_color=real_color,

@@ -425,32 +425,41 @@ def plot_typical_week_box_plot(df, meter_id, plot_height, orientation, boxgap, b
 
 
 # Function to display comparison tables and charts for a specific sensor within a tab
-def absrd_plot_comparison_digital_real(meter_id, plot_data, timeframe, table_height, chart_height, chart_margins, digital_color, real_color):
-    # Create two columns: one for the table and one for the chart
+def absrd_plot_comparison_digital_real(meter_id, df, timeframe, table_height, chart_height, chart_margins, digital_color, real_color):
+
+    df_table = df.copy()
+
+    # Add a new column 'Diff %'
+    df_table["Diff %"] = 100* (df_table["Digital"] - df_table["Real"]) / df_table["Real"]
+    # Add "+" to positive values
+    df_table["Diff %"] = df_table["Diff %"].apply(lambda x: f"+{x:.0f}%" if x > 0 else f"{x:.0f}%")
+
     col1, col2 = st.columns([2, 5])
 
     # In the first column, display the table
     with col1:
-        st.markdown(f"##### {timeframe} totals for meter: {meter_id} (table)")
-        st.dataframe(round(plot_data,2), height=table_height)
+        st.markdown(f"##### {timeframe} totals for meter: {meter_id}")
+        st.dataframe(round(df_table,1), height=table_height)
 
     # In the second column, plot the comparison as a column chart
     with col2:
-        st.markdown(f"##### {timeframe} totals for meter: {meter_id} (chart)")
+        st.markdown('')
+        st.markdown('')
 
         # Reshape data into long-form for Plotly
-        plot_data_long = plot_data.reset_index().melt(id_vars='datetime', var_name='Type', value_name='Daily Total')
+        df_chart = df
+        df_chart_long = df_chart.reset_index().melt(id_vars='datetime', var_name='Type', value_name='Total')
 
         # Create a Plotly figure with separate traces for digital and real data
         fig = px.bar(
-            plot_data_long,
+            df_chart_long,
             x='datetime',
-            y='Daily Total',
+            y='Total',
             color='Type',  # Color by 'Type' to differentiate 'Daily Digital' and 'Daily Real'
-            color_discrete_map={'Daily Digital': digital_color, 'Daily Real': real_color},
+            color_discrete_map={'Digital': digital_color, 'Real': real_color},
             barmode='group',
             height=chart_height,
-            labels={'Daily Total': 'Daily Totals', 'datetime': 'Date'}
+            # labels={'Daily Total': 'Daily Totals', 'datetime': 'Date'}
         )
 
         # Customize the margins using the user-defined margins
